@@ -2,7 +2,7 @@ The Diotp Project - The humidity task
 ------------------------------------------------------
 http://135.236.208.169
 
-*IMPORTANT: Currently it's not avaiable to see the data in frontend part, you can ask me to show username and pass in INFLUXDBINFLUXDB* 
+*IMPORTANT: Currently it's not avaiable to see the data in frontend part, you can ask me to show username and pass in INFLUXDB* 
 
 Overall Instruction:
 The project through out the process of collecting the data with using embedded devices, transmitting, analyzing in Backend part and showing the data in the Frontend part. It can used and updated in real-time operation to show the humidity rate around the area with the sensor based on the embedded devices. After that, it will transfer through api to update to the Frontend part with a chart to show the humidity rate.
