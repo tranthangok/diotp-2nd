@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Humidity Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chart-container {
+            width: 65%;
+        }
+        .box {
+            width: 30%;
+            text-align: center;
+        }
+        canvas {
+            width: 100%;
+            height: 500px;
+        }
+        svg {
+            width: 100%;
+            height: 300px;
+        }
+        .tear {
+            stroke: black;
+            stroke-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Humidity Data</h1>
+    <div class="container">
+        <div class="chart-container">
+            <canvas id="humidityChart"></canvas>
+        </div>
+        <div class="box">
+            <svg width="100%" viewBox="0 0 50 42">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:rgb(255,255,255);stop-opacity:1" />
+                        <stop offset="60%" style="stop-color:rgb(0,0,255);stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <!-- Tear shape -->
+                <path id="tear" class="tear" d="M15 6 Q 15 6, 25 18 A 12.8 12.8 0 1 1 5 18 Q 15 6 15 6z" fill="green"/>
+            </svg>
+            <p id="humidityText">Humidity: 0%</p>
+        </div>
+    </div>
+
+    <script>
+        const tear = document.getElementById('tear');
+        const humidityText = document.getElementById('humidityText');
+        let humidityValues = [];
+        let chartInstance = null;
+        const API_URL = 'http://135.236.208.169/api/v1/get-data';
+
+        async function fetchData() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data from API');
+                }
+                const data = await response.json();
+                updateChart(data);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function updateChart(data) {
+            const times = data.map(row => new Date(row._time).toLocaleString());
+            const values = data.map(row => row._value);
+
+            const latestHumidity = values[values.length - 1];
+            humidityValues = [...values];
+
+            humidityText.innerText = `Humidity: ${Math.round(latestHumidity)}%`;
+
+            if (latestHumidity >= 60) {
+                tear.setAttribute('fill', 'green');
+            } else if (latestHumidity >= 30) {
+                tear.setAttribute('fill', 'yellow');
+            } else {
+                tear.setAttribute('fill', 'red');
+            }
+
+            if (chartInstance) {
+                chartInstance.data.labels = times;
+                chartInstance.data.datasets[0].data = values;
+                chartInstance.update();
+            } else {
+                const ctx = document.getElementById('humidityChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: times,
+                        datasets: [{
+                            label: 'Humidity (%)',
+                            data: values,
+                            borderColor: 'blue',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            tension: 0.2,
+                            fill: true,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Time' },
+                            },
+                            },
+                            y: {
+                                title: { display: true, text: 'Humidity (%)' },
+                            },
+                        },
+                    },
+                );
+            }
+        }
+    
+
+        fetchData();
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+</html>
